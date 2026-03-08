@@ -88,18 +88,43 @@ def update_stock():
                 return
     print(f"❌ Product '{name}' not found.")
 
+
+def search_product():
+    """Searches for products by name (partial matches allowed)."""
+    query = input("\nEnter product name to search: ").lower()
+    
+    # İsmi içinde arama terimi geçenleri bulalım
+    results = [item for item in inventory if query in item['name'].lower()]
+    
+    if not results:
+        print(f"❌ No products found matching '{query}'.")
+        return
+
+    print("\n" + "-"*45)
+    print(f"🔍 SEARCH RESULTS for '{query}':")
+    print("-" * 45)
+    print(f"{'Product Name':<20} | {'Stock':<10} | {'Price':<10}")
+    print("-" * 45)
+    
+    for item in results:
+        status = "⚠️ LOW" if item['quantity'] < 5 else ""
+        print(f"{item['name']:<20} | {item['quantity']:<10} | ${item['price']:<10} {status}")
+    
+    print("-" * 45 + "\n")
+
+
 # --- 3. Ana Döngü (EN ALTTA OLMALI) ---
 if __name__ == "__main__":
     load_data()
     while True:
-        print("\n--- Inventory Management System ---")
         print("1. Add Product")
         print("2. Show Inventory")
         print("3. Update Stock") 
         print("4. Delete Product") 
-        print("5. Exit")
+        print("5. Search Product") 
+        print("6. Exit")
         
-        choice = input("Select an option (1-5): ")
+        choice = input("Select an option (1-6): ")
         
         if choice == "1":
             add_product()
@@ -109,7 +134,9 @@ if __name__ == "__main__":
             update_stock()
         elif choice == "4":
             delete_product()
-        elif choice == "5":
+        elif choice == "5": 
+            search_product()
+        elif choice == "6":
             print("Exiting... Goodbye!")
             break
         else:
