@@ -24,16 +24,22 @@ def load_data():
 def add_product():
     print("\n--- Add New Product ---")
     name = input("Enter product name: ")
-    quantity = int(input("Enter quantity: "))
-    price = float(input("Enter price: "))
     
+    # Sayısal girişleri kontrol altına alıyoruz
+    try:
+        quantity = int(input("Enter quantity: "))
+        price = float(input("Enter price: "))
+    except ValueError:
+        print("❌ Error: Quantity and Price must be numbers! Product not added.")
+        return # Fonksiyondan çık, hatalı veriyi ekleme
+
     product = {
         "name": name,
         "quantity": quantity,
         "price": price
     }
     inventory.append(product)
-    save_data() # Her eklemede kaydet!
+    save_data()
     print(f"✅ {name} added successfully!")
 
 def show_inventory():
