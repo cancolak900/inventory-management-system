@@ -1,36 +1,52 @@
 # main.py
 
-# Our storage list (List of Dictionaries)
 inventory = []
 
-def add_product(name, quantity, price):
-    """Adds a new product to the inventory."""
+def add_product():
+    """Gets product details from user and adds to inventory."""
+    print("\n--- Add New Product ---")
+    name = input("Enter product name: ")
+    # int() ve float() kullanarak metni sayıya çeviriyoruz
+    quantity = int(input("Enter quantity: "))
+    price = float(input("Enter price: "))
+    
     product = {
         "name": name,
         "quantity": quantity,
         "price": price
     }
     inventory.append(product)
-    print(f"✅ Success: {name} added to inventory.")
+    print(f"✅ {name} added successfully!")
 
 def show_inventory():
-    """Prints all products in a clean format."""
-    print("\n" + "="*30)
-    print("CURRENT INVENTORY STATUS")
-    print("="*30)
-    
-    for item in inventory:
-        print(f"Product: {item['name']} | Stock: {item['quantity']} | Price: ${item['price']}")
-    
-    print("="*30 + "\n")
+    """Lists all products in the inventory."""
+    if not inventory:
+        print("\n⚠️ Inventory is empty!")
+        return
 
-# Entry point of the program
+    print("\n" + "="*40)
+    print(f"{'Product Name':<20} | {'Stock':<10} | {'Price':<10}")
+    print("-" * 40)
+    for item in inventory:
+        print(f"{item['name']:<20} | {item['quantity']:<10} | ${item['price']:<10}")
+    print("="*40 + "\n")
+
+# --- MAIN PROGRAM LOOP ---
 if __name__ == "__main__":
-    print("--- Welcome to the Inventory Management System ---")
-    
-    # Adding sample data
-    add_product("MacBook Pro", 5, 2500)
-    add_product("Wireless Mouse", 20, 45)
-    
-    # Show the results
-    show_inventory()
+    while True:
+        print("\n--- Inventory Management System ---")
+        print("1. Add Product")
+        print("2. Show Inventory")
+        print("3. Exit")
+        
+        choice = input("Select an option (1-3): ")
+        
+        if choice == "1":
+            add_product()
+        elif choice == "2":
+            show_inventory()
+        elif choice == "3":
+            print("Exiting... Goodbye!")
+            break # Döngüyü kırar ve programı bitirir
+        else:
+            print("❌ Invalid choice! Please try again.")
