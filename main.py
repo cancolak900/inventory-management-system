@@ -39,12 +39,28 @@ def show_inventory():
     if not inventory:
         print("\n⚠️ Inventory is empty!")
         return
-    print("\n" + "="*40)
+
+    print("\n" + "="*45)
     print(f"{'Product Name':<20} | {'Stock':<10} | {'Price':<10}")
-    print("-" * 40)
+    print("-" * 45)
+    
+    low_stock_items = [] # Düşük stoklu ürünleri burada toplayacağız
+
     for item in inventory:
-        print(f"{item['name']:<20} | {item['quantity']:<10} | ${item['price']:<10}")
-    print("="*40 + "\n")
+        # Ürün bilgilerini yazdır
+        status = ""
+        if item['quantity'] < 5:
+            status = "⚠️ LOW STOCK"
+            low_stock_items.append(item['name'])
+            
+        print(f"{item['name']:<20} | {item['quantity']:<10} | ${item['price']:<10} {status}")
+    
+    print("="*45)
+
+    # Eğer düşük stoklu ürün varsa, listenin sonunda toplu bir uyarı geçelim
+    if low_stock_items:
+        print(f"\n📢 ALERT: You need to restock: {', '.join(low_stock_items)}")
+    print("\n")
 
 def delete_product():
     name = input("Enter the name of the product to delete: ")
