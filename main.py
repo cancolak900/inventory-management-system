@@ -1,143 +1,118 @@
 import json
 import os
 
-DATA_FILE = "inventory.json"
-inventory = []
+class Product:
+    def __init__(self, name, quantity, price):
+        self.name = name
+        self.quantity = quantity
+        self.price = price
 
-# --- 1. Yardımcı Fonksiyonlar ---
-def save_data():
-    with open(DATA_FILE, "w") as file:
-        json.dump(inventory, file, indent=4)
-    print("💾 Data saved to file.")
+    def to_dict(self):
+        return {"name": self.name, "quantity": self.quantity, "price": self.price}
 
-def load_data():
-    global inventory
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r") as file:
-            inventory = json.load(file)
-        print("📁 Data loaded from file.")
-    else:
-        inventory = []
+class InventoryManager:
+    def __init__(self, filename="inventory.json"):
+        self.filename = filename
+        self.inventory = []
+        self.load_data()
 
-# --- 2. İşlem Fonksiyonları ---
-def add_product():
-    print("\n--- Add New Product ---")
-    name = input("Enter product name: ")
-    try:
-        quantity = int(input("Enter quantity: "))
-        price = float(input("Enter price: "))
-    except ValueError:
-        print("❌ Error: Quantity and Price must be numbers!")
-        return
-    
-    product = {"name": name, "quantity": quantity, "price": price}
-    inventory.append(product)
-    save_data()
-    print(f"✅ {name} added successfully!")
+    def save_data(self):
+        with open(self.filename, "w") as file:
+            json_data = [p.to_dict() for p in self.inventory]
+            json.dump(json_data, file, indent=4)
+        print("💾 Changes saved to disk.")
 
-def show_inventory():
-    if not inventory:
-        print("\n⚠️ Inventory is empty!")
-        return
+    def load_data(self):
+        if os.path.exists(self.filename):
+            with open(self.filename, "r") as file:
+                data = json.load(file)
+                self.inventory = [Product(item['name'], item['quantity'], item['price']) for item in data]
+            print(f"📁 Loaded {len(self.inventory)} products.")
 
-    print("\n" + "="*45)
-    print(f"{'Product Name':<20} | {'Stock':<10} | {'Price':<10}")
-    print("-" * 45)
-    
-    low_stock_items = [] # Düşük stoklu ürünleri burada toplayacağız
+    def add_item(self):
+        print("\n--- Add New Product ---")
+        name = input("Enter product name: ")
+        try:
+            qty = int(input("Enter quantity: "))
+            prc = float(input("Enter price: "))
+            self.inventory.append(Product(name, qty, prc))
+            self.save_data()
+            print(f"✅ {name} added.")
+        except ValueError:
+            print("❌ Invalid input! Numbers required.")
 
-    for item in inventory:
-        # Ürün bilgilerini yazdır
-        status = ""
-        if item['quantity'] < 5:
-            status = "⚠️ LOW STOCK"
-            low_stock_items.append(item['name'])
-            
-        print(f"{item['name']:<20} | {item['quantity']:<10} | ${item['price']:<10} {status}")
-    
-    print("="*45)
+    def show_all(self):
+        if not self.inventory:
+            print("\n⚠️ Inventory is empty!")
+            return
+        print("\n" + "="*55)
+        print(f"{'Product Name':<20} | {'Stock':<10} | {'Price':<10}")
+        print("-" * 55)
+        low_stock = []
+        for p in self.inventory:
+            status = "⚠️  LOW STOCK" if p.quantity < 5 else ""
+            if p.quantity < 5: low_stock.append(p.name)
+            print(f"{p.name:<20} | {p.quantity:<10} | ${p.price:<10.2f} {status}")
+        print("="*55)
+        if low_stock:
+            print(f"📢 Restock needed: {', '.join(low_stock)}")
 
-    # Eğer düşük stoklu ürün varsa, listenin sonunda toplu bir uyarı geçelim
-    if low_stock_items:
-        print(f"\n📢 ALERT: You need to restock: {', '.join(low_stock_items)}")
-    print("\n")
-
-def delete_product():
-    name = input("Enter the name of the product to delete: ")
-    global inventory
-    original_count = len(inventory)
-    inventory = [item for item in inventory if item['name'].lower() != name.lower()]
-    if len(inventory) < original_count:
-        save_data()
-        print(f"🗑️ {name} has been removed.")
-    else:
-        print(f"❌ Product '{name}' not found.")
-
-def update_stock():
-    name = input("Enter product name to update stock: ")
-    for item in inventory:
-        if item['name'].lower() == name.lower():
-            try:
-                new_qty = int(input(f"Current stock is {item['quantity']}. Enter new stock: "))
-                item['quantity'] = new_qty
-                save_data()
-                print(f"🔄 {name} stock updated to {new_qty}.")
-                return
-            except ValueError:
-                print("❌ Invalid input!")
-                return
-    print(f"❌ Product '{name}' not found.")
-
-
-def search_product():
-    """Searches for products by name (partial matches allowed)."""
-    query = input("\nEnter product name to search: ").lower()
-    
-    # İsmi içinde arama terimi geçenleri bulalım
-    results = [item for item in inventory if query in item['name'].lower()]
-    
-    if not results:
-        print(f"❌ No products found matching '{query}'.")
-        return
-
-    print("\n" + "-"*45)
-    print(f"🔍 SEARCH RESULTS for '{query}':")
-    print("-" * 45)
-    print(f"{'Product Name':<20} | {'Stock':<10} | {'Price':<10}")
-    print("-" * 45)
-    
-    for item in results:
-        status = "⚠️ LOW" if item['quantity'] < 5 else ""
-        print(f"{item['name']:<20} | {item['quantity']:<10} | ${item['price']:<10} {status}")
-    
-    print("-" * 45 + "\n")
-
-
-# --- 3. Ana Döngü (EN ALTTA OLMALI) ---
-if __name__ == "__main__":
-    load_data()
-    while True:
-        print("1. Add Product")
-        print("2. Show Inventory")
-        print("3. Update Stock") 
-        print("4. Delete Product") 
-        print("5. Search Product") 
-        print("6. Exit")
+    # --- GERİ GELEN ÖZELLİK: ARAMA ---
+    def search_item(self):
+        query = input("\nEnter product name to search: ").lower()
+        results = [p for p in self.inventory if query in p.name.lower()]
         
-        choice = input("Select an option (1-6): ")
-        
-        if choice == "1":
-            add_product()
-        elif choice == "2":
-            show_inventory()
-        elif choice == "3":
-            update_stock()
-        elif choice == "4":
-            delete_product()
-        elif choice == "5": 
-            search_product()
-        elif choice == "6":
-            print("Exiting... Goodbye!")
-            break
+        if not results:
+            print(f"❌ No products found matching '{query}'.")
+            return
+
+        print(f"\n🔍 Results for '{query}':")
+        for p in results:
+            print(f"- {p.name} (Stock: {p.quantity}, Price: ${p.price:.2f})")
+
+    # --- GERİ GELEN ÖZELLİK: GÜNCELLEME ---
+    def update_item(self):
+        name = input("\nEnter product name to update: ").lower()
+        for p in self.inventory:
+            if p.name.lower() == name:
+                try:
+                    new_qty = int(input(f"Current stock: {p.quantity}. New stock: "))
+                    p.quantity = new_qty
+                    self.save_data()
+                    print(f"🔄 {p.name} updated.")
+                    return
+                except ValueError:
+                    print("❌ Invalid quantity!")
+                    return
+        print("❌ Product not found.")
+
+    def delete_item(self):
+        name = input("\nEnter name to delete: ").lower()
+        original_len = len(self.inventory)
+        self.inventory = [p for p in self.inventory if p.name.lower() != name]
+        if len(self.inventory) < original_len:
+            self.save_data()
+            print(f"🗑️ {name} removed.")
         else:
-            print("❌ Invalid choice!")
+            print("❌ Not found.")
+
+def main():
+    manager = InventoryManager()
+    while True:
+        print("\n--- Professional Inventory System ---")
+        print("1. Add Product   2. Show List   3. Update Stock")
+        print("4. Delete Prod.  5. Search      6. Exit")
+        choice = input("Select (1-6): ")
+
+        if choice == "1": manager.add_item()
+        elif choice == "2": manager.show_all()
+        elif choice == "3": manager.update_item()
+        elif choice == "4": manager.delete_item()
+        elif choice == "5": manager.search_item()
+        elif choice == "6": 
+            print("System shutting down...")
+            break
+        else: print("❌ Invalid choice.")
+
+if __name__ == "__main__":
+    main()
