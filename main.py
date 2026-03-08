@@ -1,12 +1,29 @@
-# main.py
+import json
+import os # Dosya var mı yok mu kontrol etmek için
 
+# Dosya adını sabit olarak tanımlıyoruz
+DATA_FILE = "inventory.json"
 inventory = []
 
+def save_data():
+    """Saves the current inventory to a JSON file."""
+    with open(DATA_FILE, "w") as file:
+        json.dump(inventory, file, indent=4)
+    print("💾 Data saved to file.")
+
+def load_data():
+    """Loads inventory from a JSON file if it exists."""
+    global inventory
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as file:
+            inventory = json.load(file)
+        print("📁 Data loaded from file.")
+    else:
+        inventory = []
+
 def add_product():
-    """Gets product details from user and adds to inventory."""
     print("\n--- Add New Product ---")
     name = input("Enter product name: ")
-    # int() ve float() kullanarak metni sayıya çeviriyoruz
     quantity = int(input("Enter quantity: "))
     price = float(input("Enter price: "))
     
@@ -16,10 +33,10 @@ def add_product():
         "price": price
     }
     inventory.append(product)
+    save_data() # Her eklemede kaydet!
     print(f"✅ {name} added successfully!")
 
 def show_inventory():
-    """Lists all products in the inventory."""
     if not inventory:
         print("\n⚠️ Inventory is empty!")
         return
@@ -31,8 +48,8 @@ def show_inventory():
         print(f"{item['name']:<20} | {item['quantity']:<10} | ${item['price']:<10}")
     print("="*40 + "\n")
 
-# --- MAIN PROGRAM LOOP ---
 if __name__ == "__main__":
+    load_data() # Program başlarken eski verileri çek
     while True:
         print("\n--- Inventory Management System ---")
         print("1. Add Product")
@@ -47,6 +64,6 @@ if __name__ == "__main__":
             show_inventory()
         elif choice == "3":
             print("Exiting... Goodbye!")
-            break # Döngüyü kırar ve programı bitirir
+            break
         else:
-            print("❌ Invalid choice! Please try again.")
+            print("❌ Invalid choice!")
