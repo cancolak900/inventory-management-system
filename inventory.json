@@ -1,17 +1,1 @@
-[
-    {
-        "name": "Iphone 17",
-        "quantity": 4,
-        "price": 990.0
-    },
-    {
-        "name": "Iphone 17 Pro",
-        "quantity": 7,
-        "price": 1330.0
-    },
-    {
-        "name": "Samsung Galaxy S26 Ultra",
-        "quantity": 12,
-        "price": 1499.0
-    }
-]
+[]
