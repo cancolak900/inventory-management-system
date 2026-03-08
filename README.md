@@ -26,4 +26,4 @@ A professional command-line interface (CLI) application built with **Python**, f
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/YOUR_USERNAME/inventory-management-system.git](https://github.com/YOUR_USERNAME/inventory-management-system.git)
+   git clone https://github.com/cancolak900/inventory-management-system.git
