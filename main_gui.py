@@ -1,11 +1,11 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, ttk, simpledialog # simpledialog eklendi!
 from main import InventoryManager, Product
 
 class InventoryGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Inventory Management System - Pro")
+        self.root.title("Inventory Management System - Pro (SQLite)")
         self.root.geometry("900x600")
         
         self.manager = InventoryManager()
@@ -17,7 +17,7 @@ class InventoryGUI:
         tk.Label(search_frame, text="Search Product:").pack(side=tk.LEFT, padx=5)
         self.ent_search = tk.Entry(search_frame)
         self.ent_search.pack(side=tk.LEFT, padx=5)
-        self.ent_search.bind("<KeyRelease>", lambda event: self.update_table()) # Yazdıkça ara
+        self.ent_search.bind("<KeyRelease>", lambda event: self.update_table())
 
         # --- INPUT AREA ---
         input_frame = tk.LabelFrame(self.root, text="Add New Item")
@@ -44,36 +44,33 @@ class InventoryGUI:
         self.tree.heading("Stock", text="Stock Quantity")
         self.tree.heading("Price", text="Price ($)")
         
-        # Renklendirme (Tag) ayarı
-        self.tree.tag_configure('low_stock', background='#ffcccc') # Açık kırmızı
+        self.tree.tag_configure('low_stock', background='#ffcccc')
         self.tree.pack(fill=tk.BOTH, expand=True, padx=20)
 
         # --- BUTTONS ---
         btn_frame = tk.Frame(self.root)
         btn_frame.pack(pady=20)
 
+        # GÜNCELLEME BUTONU EKLENDİ
+        tk.Button(btn_frame, text="Update Stock", command=self.update_ui, bg="#2196F3", fg="white").pack(side=tk.LEFT, padx=10)
         tk.Button(btn_frame, text="Delete Selected", command=self.delete_ui, bg="#f44336", fg="white").pack(side=tk.LEFT, padx=10)
         tk.Button(btn_frame, text="Refresh List", command=self.update_table).pack(side=tk.LEFT, padx=10)
 
         self.update_table()
 
     def clear_entries(self):
-        """Kutuları temizler."""
         self.ent_name.delete(0, tk.END)
         self.ent_qty.delete(0, tk.END)
         self.ent_price.delete(0, tk.END)
 
     def update_table(self):
-        """Tabloyu temizler, arama kriterine göre yeniden doldurur ve stok uyarısı yapar."""
         for i in self.tree.get_children():
             self.tree.delete(i)
         
         search_query = self.ent_search.get().lower()
         
         for p in self.manager.inventory:
-            # Arama filtresi
             if search_query in p.name.lower():
-                # Düşük stok kontrolü
                 tag = 'low_stock' if p.quantity < 5 else ''
                 self.tree.insert("", tk.END, values=(p.name, p.quantity, f"${p.price:.2f}"), tags=(tag,))
 
@@ -87,13 +84,32 @@ class InventoryGUI:
                 messagebox.showwarning("Warning", "Product name cannot be empty!")
                 return
 
-            self.manager.inventory.append(Product(name, qty, prc))
-            self.manager.save_data()
+            self.manager.add_item(name, qty, prc)
             self.update_table()
-            self.clear_entries() # EKLEDİKTEN SONRA TEMİZLE
+            self.clear_entries()
             messagebox.showinfo("Success", f"{name} added successfully!")
         except ValueError:
             messagebox.showerror("Error", "Quantity must be an integer and Price must be a number.")
+
+    # YENİ GÜNCELLEME FONKSİYONU
+    def update_ui(self):
+        selected_item = self.tree.selection()
+        if not selected_item:
+            messagebox.showwarning("Warning", "Please select a product from the list to update.")
+            return
+
+        item_values = self.tree.item(selected_item)['values']
+        name_to_update = item_values[0]
+        current_qty = item_values[1]
+
+        # Kullanıcıya küçük bir pencerede yeni stoğu soruyoruz
+        new_qty = simpledialog.askinteger("Update Stock", f"Enter new stock for {name_to_update}:", initialvalue=current_qty)
+
+        # Eğer iptale basmazsa (None dönmezse) güncelle
+        if new_qty is not None:
+            self.manager.update_item(name_to_update, new_qty)
+            self.update_table()
+            messagebox.showinfo("Success", f"{name_to_update} stock updated to {new_qty}.")
 
     def delete_ui(self):
         selected_item = self.tree.selection()
@@ -105,14 +121,11 @@ class InventoryGUI:
         name_to_delete = item_values[0]
 
         if messagebox.askyesno("Confirm", f"Are you sure you want to delete {name_to_delete}?"):
-            self.manager.inventory = [p for p in self.manager.inventory if p.name != name_to_delete]
-            self.manager.save_data()
+            self.manager.delete_item(name_to_delete)
             self.update_table()
-
+            messagebox.showinfo("Deleted", f"{name_to_delete} removed.")
 
 if __name__ == "__main__":
-    print("🚀 GUI başlatılıyor...") # Test mesajı 1
     root = tk.Tk()
     app = InventoryGUI(root)
-    print("✅ Pencere döngüsü (mainloop) giriliyor...") # Test mesajı 2
     root.mainloop()
